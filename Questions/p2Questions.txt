@@ -1,0 +1,8 @@
+1.It will take me approximately 29 hours.
+2.
+Thought/Design: 3 hours
+Programming: 12 hours
+Debugging: 10 hours
+TOTAL: 25 hours
+
+3.It was about 86% accurate.

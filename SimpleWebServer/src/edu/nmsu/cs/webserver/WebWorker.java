@@ -32,6 +32,7 @@ import java.net.Socket;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+//import java.util.StringTokenizer;
 import java.util.TimeZone;
 import java.io.*;
 
@@ -40,14 +41,19 @@ public class WebWorker implements Runnable
 
 	private Socket socket;
 	private File webFile;
-
+    private String path;
+    private String fileType;
+    //private String type;
+    //private String fileName;
+    //private FileInputStream input;
+    //private boolean fileExists = false;
 	/**
 	 * Constructor: must have a valid open socket
 	 **/
 	public WebWorker(Socket s)
 	{
 		socket = s;
-		webFile = new File("");
+		//webFile = new File("");
 	}
 
 	/**
@@ -62,13 +68,41 @@ public class WebWorker implements Runnable
 		{
 			InputStream is = socket.getInputStream();
 		    OutputStream os = socket.getOutputStream();
-			readHTTPRequest(is);
-		    writeHTTPHeader(os, "text/html");
-			writeContent(os);
-			os.flush();			
-			//String filename = "";											
+			readHTTPRequest(is);	
+			
+			webFile = new File(path);
+			fileType = path.substring(path.lastIndexOf(".")+ 1);
+			System.out.println(path);
+			
+			if(webFile.exists() && webFile.isFile()){
+				
+				if (fileType.equals("png")) {
+					writeHTTPHeader(os, "image/png");	                
+	            } 
+				
+				else if (fileType.equals("jpg")) {
+					writeHTTPHeader(os, "image/jpeg");
+				}
+				
+				else if (fileType.equals("gif")) {
+					writeHTTPHeader(os, "image/gif");
+				}
+				else if (fileType.equals("ico")) {
+					writeHTTPHeader(os, "image/x-con");
+				}
+				else {
+					writeHTTPHeader(os, "text/html");
+				}
+				writeContent(os);
+			}
+			else {
+				writeHTTPHeader(os, "text/html");
+				os.write("<html><head></head><body>\n".getBytes());
+				os.write("<h1>Error 404</h1></div>\n".getBytes());
+			    os.write("<h3>The page you are trying to access does not exist.</h3></div>\n</body>\n</html>".getBytes());
+			}
+			os.flush();													
 			socket.close();		    
-	    
 		}
         catch (Exception e) {        	
     	    System.err.println("Output error: " + e); 		
@@ -78,6 +112,7 @@ public class WebWorker implements Runnable
 	    return;
 	}
 
+	
 	/**
 	 * Read the HTTP request header.
 	 **/
@@ -85,53 +120,50 @@ public class WebWorker implements Runnable
 	{
 		String line;
 		BufferedReader r = new BufferedReader(new InputStreamReader(is));
+			
 		while (true)
 		{
 			try
 			{
 				while (!r.ready())
-					Thread.sleep(1);
-				line = r.readLine();	
-				
-				System.err.println("Request line: (" + line + ")");		
-				if (line.length() == 0)
-					break;
-				
-				// if searches for Request line: (GET /favicon.ico HTTP/1.1) line in order to 
-				// Determine the HTML file being served exists, this will lead to 404 no found
-				if( line.contains("GET /") && !line.contains("favicon.ico")) 
-				{	
-					String[] section =  line.split(" ");
-					String location =  section[1];
-				   
-					
-					System.out.println(location);
-					
-					if(location.equals("./"))
-					{
-					    System.err.println("Connection Successful");
-					    location = "./text.html";
-					}
-					
-					webFile = new File(new File("."), location);
-               
-					if( webFile.isFile() && webFile.exists()) {
-                    	System.out.println("SUCCESS");
-                    }
-					
-					System.out.println(webFile.getAbsolutePath());
-					System.out.println(webFile.exists());
-					
-				}//end outer if		
+				    Thread.sleep(1);
+			    line = r.readLine();	
 			
-			}
-			catch (Exception e)
-			{
-				System.err.println("Request error: " + e);
-				break;
-			}
+			    System.err.println("Request line: (" + line + ")");		
+			    if (line.length() == 0)
+				    break;
+			
+			    // if searches for Request line: (GET /favicon.ico HTTP/1.1) line in order to 
+			    // Determine the HTML file being served exists, this will lead to 404 no found
+			    if( line.substring(0,3).equals("GET") ) 
+			    {	
+				    String[] section =  line.split(" ");
+				    path =  "www" + section[1];				
+				    System.out.println(path);
+				
+			    	if(path.equals("./")){
+				        System.out.println("Connection Successful");				       
+				    }
+				
+				    webFile = new File(new File("."), path);
+           
+				    if( webFile.isFile() && webFile.exists()) {
+                	    System.out.println("SUCCESS");
+                    }
+				
+				System.out.println(webFile.getAbsolutePath());
+				System.out.println(webFile.exists());
+				
+			}//end outer if		
+		
 		}
-		return;
+		catch (Exception e)
+		{
+			System.err.println("Request error: " + e);
+			break;
+		}
+	}
+	return;
 	}//end readHTTPRequest
 
 	/**
@@ -150,7 +182,7 @@ public class WebWorker implements Runnable
 		
 		// if conditional to check if the file exists or not
 		// Will print out the correct HTTP header response depending on scenario
-		if (webFile.exists() && webFile.isFile() ) 
+		if (webFile.exists() && webFile.isFile()) 
 		{
 			os.write("HTTP/1.1 200 OK\n".getBytes());
 		}
@@ -181,39 +213,41 @@ public class WebWorker implements Runnable
 	 **/
 	private void writeContent(OutputStream os) throws Exception
 	{
-		// If the HTML file being served does not exist 
-		// We will return a 404 Not Found
-		if( !webFile.exists() || !webFile.isFile( )) {
-			os.write("<html><head></head><body>\n".getBytes());
-			os.write("<h1>Error 404</h1></div>\n".getBytes());
-		    os.write("<h3>The page you are trying to access does not exist.</h3></div>\n</body>\n</html>".getBytes());
-			return;
-		}
-		else
-		{
+		
+		if(fileType.equals("html")) {
+			
 			BufferedReader r = new BufferedReader(new FileReader(webFile));
 			Date d = new Date();
 			DateFormat df = new SimpleDateFormat("MM/dd/yy HH:mm:ss");
-			//DateFormat df = DateFormat.getDateTimeInstance();
-			df.setTimeZone(TimeZone.getTimeZone("PST"));
-			String line;				
+			df.setTimeZone(TimeZone.getTimeZone("GMT"));							
+			String line;
 			
-			  while ((line = r.readLine()) != null)
-			  {				
-				  if(line.contains("<cs371date>"))			
+			 while ((line = r.readLine()) != null)
+			  {							  
+				    if(line.contains("<cs371date>"))			
 						line = line.replaceAll("<cs371date>", df.format(d));
-					
-					
-					if(line.contains("<cs371server>"))					
-						line = line.replaceAll("<cs371server>", "Isaias' Broken WebServer");
 									
+					if(line.contains("<cs371server>"))					
+						line = line.replaceAll("<cs371server>", "Isaias' WebServer");
+				
+					os.write("<html><head><title>Isaias' Broken WebServer!!!</title>".getBytes());
+					os.write("</head>".getBytes());
 					os.write(line.getBytes());
 					
-	        	}			                
-			    r.close();
-		               		    	      
-	     }
-	   }			
+			 }//end while			
+		     r.close();
+		}
+		else {
+			
+			FileInputStream pic = new FileInputStream(path);
+			int n = pic.available();
+			byte[] B = new byte[n];
+			pic.read(B);
+			pic.close();
+			os.write(B);
+	   }
+				 			      	
+	 }//end writeContent			
      
    }//end class
 		

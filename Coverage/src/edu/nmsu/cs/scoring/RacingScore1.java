@@ -38,12 +38,17 @@ public class RacingScore1
 	public int overallScore()
 	{
 		int s;
-		if (score1 < score2)
+		//Changed code here to different conditional
+		if (score1 > score2)
 			s = score2;
+		
 		else
+			
 			s = score1;
+		
 		if (s > score3)
 			s = score3;
+		
 		s = (score1 + score2 + score3) - s;
 		return s;
 	}
@@ -67,6 +72,14 @@ public class RacingScore1
 			System.err.println("Error: arguments must be integers!");
 			return;
 		}
+		
+		//Added extra check in order to account for different cases
+		if (!(0 <= s1 && s1 <= 50 && 0 <= s2 && s2 <= 50 && 0 <= s3 && s3<= 50))
+		{
+			System.err.println("Error: scores must be between 0 and 50!");
+			return;
+		}
+		
 		RacingScore1 score = new RacingScore1();
 		score.recordScores(s1, s2, s3);
 		System.out.println("Overall score: " + score.overallScore());

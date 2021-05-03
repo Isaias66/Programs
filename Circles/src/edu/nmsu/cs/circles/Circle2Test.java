@@ -12,12 +12,12 @@ package edu.nmsu.cs.circles;
 import org.junit.*;
 
 
-public class Circle1Test
+public class Circle2Test
 {
 	// Data you need for each test case
 	private Circle1 circle1;
-    private Circle2 circle2;
-    
+	private Circle2 circle2;
+
 	//
 	// Stuff you want to do before each test case
 	//
@@ -26,7 +26,7 @@ public class Circle1Test
 	{
 		System.out.println("\nTest starting...");
 		circle1 = new Circle1(1, 2, 3);
-		circle2 = new Circle2(1,2,2);
+		circle2 = new Circle2(1, 2, 2);
 	}
 
 	//
@@ -36,6 +36,7 @@ public class Circle1Test
 	public void teardown()
 	{
 		System.out.println("\nTest finished.");
+		System.out.println("\n");
 	}
 
 	//
@@ -46,7 +47,7 @@ public class Circle1Test
 	{
 		Point p;
 		System.out.println("Running test simpleMove.");
-		p = circle1.moveBy(1, 1);
+		p = circle2.moveBy(1, 1);
 		Assert.assertTrue(p.x == 2 && p.y == 3);
 	}
 
@@ -58,20 +59,32 @@ public class Circle1Test
 	{
 		Point p;
 		System.out.println("Running test simpleMoveNeg.");
-		p = circle1.moveBy(-1, -1);
+		p = circle2.moveBy(-1, -1);
 		Assert.assertTrue(p.x == 0 && p.y == 1);
 	}
-    
-	
+
 	//
-	// Test intersects method
+	//Test a radius scale
+	//
+	@Test
+	public void testScale()
+	{
+		System.out.println("Running testScale.");
+		Assert.assertEquals(3*circle2.radius, circle2.scale(3),0.001);
+	}
+
+	//
+	//Test intersects method of Circle2
 	//
 	@Test
 	public void testIntersects()
 	{
-		System.out.println("nRunning testIntersects");
-		Assert.assertEquals(false, circle1.intersects(circle2));
+		System.out.println("Running testIntersects.");
+		Assert.assertEquals(false, circle2.intersects(circle1));
 	}
+
+
+
 	/***
 	 * NOT USED public static void main(String args[]) { try { org.junit.runner.JUnitCore.runClasses(
 	 * java.lang.Class.forName("Circle1Test")); } catch (Exception e) { System.out.println("Exception:
